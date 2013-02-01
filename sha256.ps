@@ -27,6 +27,8 @@ setfont
 430227734 506948616 659060556 883997877 958139571 1322822218 1537002063 1747873779 1955562222 2024104815 2227730452 2361852424 2428436474 
 2756734187 3204031479 3329325298] def
 
+/LIMIT 4294967295 def %0xffffffff
+
 
 %initial SHA256 values
 /H [1779033703 3144134277 1013904242 2773480762 1359893119 2600822924 528734635 1541459225] def
@@ -109,47 +111,152 @@ setfont
   xor xor exch pop
 } def
 
-0 680 moveto
-(rotr(3, 234)) show
-0 670 moveto
-/ro 123 3 rotr def
-ro 20 string cvs show
-
 /sha256 {
+
+  %%%%%%%%%%%%%%%%%%
+  %% PREPROCESSING (complete)
+  %%%%%%%%%%%%%%%%%%
+
   %first need to append 0x80 to input (I think € = 0x80, but could be wrong)
-  /padded_input input (€) concatstrings def
+  (€) concatstrings % ok
   
-  %l = len(padded_input)/4 + 2
-  /l padded_input length def
-  /l 4 l div def
-  /l l 2 add def
+  /input exch def % ok
+  /l input length 4 div 2 add cvi def % ok
+  /N l 16 div ceiling cvi def % ok
+  /M N array def % ok
   
-  0 660 moveto
-  (l = ) show
-  0 650 moveto
-  l 20 string cvs show
   
-  %N = ceiling(l/16)
-  /N l 16 div def
-  /N N ceiling def
+  %%%%%%%%%%%%%%%%%%%%%%%
+  %% MESSAGE FORMATTING (complete)
+  %%%%%%%%%%%%%%%%%%%%%%%
   
-  0 640 moveto
-  (N = ) show
-  0 630 moveto
-  N 20 string cvs show
+  /i 0 def % ok
+  1 1 N { % ok
+    M i 16 array put % ok
+    /j 0 def % ok
+    0 1 15 { % ok
+      /offset i 64 mul j 4 mul add def % ok
+      /o24 input offset get 24 bitshift def % ok
+      /o16 input offset 1 add get 16 bitshift def % ok
+      /o8 input offset 2 add get 8 bitshift def % ok
+      /o input offset 3 add get def % ok
+      /final o24 o16 or o8 or o or def % ok
+      M i get j final put % ok
+      /j j 1 add def % ok
+    } for % ok
+    /i i 1 add def % ok
+  } for % ok
   
+  /sig_bits input length 1 sub 8 mul LIMIT div def % ok
+  /sig_bits sig_bits floor cvi def % ok
+  /less_bits input length 1 sub 8 mul def % ok
+  
+  M N 1 sub get 14 sig_bits cvi put % ok
+  M N 1 sub get 15 less_bits cvi put % ok
+  
+  %%%%%%%%%%%%%%%%%%%%%
+  %% HASH COMPUTATION
+  %%%%%%%%%%%%%%%%%%%%%
+  
+  /W 64 array def % ok
+  /a 0 def % ok
+  /b 0 def % ok
+  /c 0 def % ok
+  /d 0 def % ok
+  /e 0 def % ok
+  /f 0 def % ok
+  /g 0 def % ok
+  /h 0 def % ok
+  
+  /i 0 def % ok
+  1 1 N {  % ok
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% PREPARE MESSAGE SCHEDULE (complete)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    /t 0 def % ok
+    0 1 15 { % ok
+      W t M i get t get put % ok
+      /t t 1 add def % ok
+    } for % ok
+    
+    % W[t] = (Sha256.sigma1(W[t-2]) + W[t-7] + Sha256.sigma0(W[t-15])
+    %+ W[t-16]) & 0xffffffff;
+    /t 16 def % ok
+    16 1 63 { % ok
+      /val W 2 t sub get sigma1 W 7 t sub get add W 15 t sub get sigma0 add def
+      /val val W 16 t sub get val add LIMIT and
+      W t val put
+      /t t 1 add def % ok
+    } % ok
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%
+    %% INIT HASH VARIABLES (complete)
+    %%%%%%%%%%%%%%%%%%%%%%%%
+    
+    /a H 0 get def
+    /b H 1 get def
+    /c H 2 get def
+    /d H 3 get def
+    /e H 4 get def
+    /f H 5 get def
+    /g H 6 get def
+    /h H 7 get def
+    
+    %%%%%%%%%%%%%%
+    %% MAIN LOOP (complete)
+    %%%%%%%%%%%%%%
+    
+    /t 0 def
+    
+    0 1 63 {
+      /T1 h e SIGMA1 add e f g Ch add K t get add W t get add def
+      /T2 a SIGMA0 a b c Maj add def
+      /h g def
+      /g f def
+      /f e def
+      /e d T1 add LIMIT and def
+      /d c def
+      /c b def
+      /b a def
+      /a T1 T2 add LIMIT and def
+      
+      /t t 1 add def
+    } for    
+    
+    %%%%%%%%%%%%%%%%%%%%%
+    %% COMPUTE NEW HASH (complete)
+    %%%%%%%%%%%%%%%%%%%%%
+    
+    %h[i] = (h[i]+i.to_c) & 0xffffffff;
+    H 0 get a add LIMIT and
+    H exch 0 exch put
+    
+    H 1 get b add LIMIT and
+    H exch 1 exch put
+    
+    H 2 get c add LIMIT and
+    H exch 2 exch put
+    
+    H 3 get d add LIMIT and
+    H exch 3 exch put
+    
+    H 4 get e add LIMIT and
+    H exch 4 exch put
+    
+    H 5 get f add LIMIT and
+    H exch 5 exch put
+    
+    H 6 get g add LIMIT and
+    H exch 6 exch put
+    
+    H 7 get h add LIMIT and
+    H exch 7 exch put
+    
+    /i i 1 add def
+  } for
 } def
 
-sha256
+(abc) sha256
 
-%/i 0 0 add def
-
-%0 100 500 {
-%  660 moveto
-%  i 20 string cvs show
-%  /i i 100 add def
-%} for
-
-%50 660 moveto
-%test 20 string cvs show
 showpage
