@@ -1,0 +1,155 @@
+%!PS
+
+%for debugging purposes
+/Times-Roman findfont
+15 scalefont
+setfont
+
+
+%test input = "abc"
+/input (abc) def
+
+
+%helper function to concat a string together
+/concatstrings % (a) (b) -> (ab)  
+{ exch dup length    
+ 2 index length add string    
+ dup dup 4 2 roll copy length
+ 4 -1 roll putinterval
+} bind def  
+
+
+%values defined by SHA256
+/K [1116352408 1899447441 3049323471 3921009573 961987163 1508970993 2453635748 2870763221 3624381080 310598401 607225278 1426881987 
+1925078388 2162078206 2614888103 3248222580 3835390401 4022224774 264347078 604807628 770255983 1249150122 1555081692 1996064986 
+2554220882 2821834349 2952996808 3210313671 3336571891 3584528711 113926993 338241895 666307205 773529912 1294757372 1396182291 
+1695183700 1986661051 2177026350 2456956037 2730485921 2820302411 3259730800 3345764771 3516065817 3600352804 4094571909 275423344 
+430227734 506948616 659060556 883997877 958139571 1322822218 1537002063 1747873779 1955562222 2024104815 2227730452 2361852424 2428436474 
+2756734187 3204031479 3329325298] def
+
+
+%initial SHA256 values
+/H [1779033703 3144134277 1013904242 2773480762 1359893119 2600822924 528734635 1541459225] def
+
+%rotate the bits right
+% (x >> n) | (x << (32-n))
+%usage <variable> <amount>
+/rotr { 
+  2 copy %make a copy of the args
+  -1 mul %for left bit shift = -<amount>
+  bitshift %stack layout: (x >> n) n x
+  exch %n (x >> n) x
+  32 exch sub %(32-n) (x >> n) x
+  2 index exch
+  bitshift %(x << (32-n)) (x >> n)
+  or exch pop
+} def
+
+
+%Ch function defined in the SHA2 Algo
+%(x & y) ^ (~x & z)
+%usage <x> <y> <z>
+/Ch {
+  2 index 2 index %y x z y x
+  and %(x & y) z y x
+  3 index not 2 index and xor
+  count 1 roll
+  pop pop pop
+} def
+
+%Maj function defined in the SHA2 Algo
+%(x & y) ^ (x & z) ^ (y & z)
+%usage <x> <y> <z>
+/Maj {
+  2 index 2 index and %(x & y)
+  3 index 2 index and %(x & z)
+  3 index 3 index and %(y & z)
+  xor xor %answer
+  count 1 roll
+  pop pop pop
+} def
+
+%function defined in the SHA2 Algo
+% rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22)
+% usage <x>
+/SIGMA0 {
+  dup 2 rotr %rotr(x, 2)
+  1 index 13 rotr %rotr(x, 13)
+  2 index 22 rotr
+  xor xor exch pop
+} def
+
+%function defined in the SHA2 Algo
+% rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25)
+% usage <x>
+/SIGMA1 {
+  dup 6 rotr
+  1 index 11 rotr
+  2 index 25 rotr
+  xor xor exch pop
+} def
+
+%function defined in the SHA2 Algo
+% rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3)
+% usage <x>
+/sigma0 {
+  dup 7 rotr
+  1 index 18 rotr
+  2 index -3 bitshift
+  xor xor exch pop
+} def
+
+%function defined in the SHA2 Algo
+% rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10)
+% usage <x>
+/sigma1 {
+  dup 17 rotr
+  1 index 19 rotr
+  2 index -10 bitshift
+  xor xor exch pop
+} def
+
+0 680 moveto
+(rotr(3, 234)) show
+0 670 moveto
+/ro 123 3 rotr def
+ro 20 string cvs show
+
+/sha256 {
+  %first need to append 0x80 to input (I think € = 0x80, but could be wrong)
+  /padded_input input (€) concatstrings def
+  
+  %l = len(padded_input)/4 + 2
+  /l padded_input length def
+  /l 4 l div def
+  /l l 2 add def
+  
+  0 660 moveto
+  (l = ) show
+  0 650 moveto
+  l 20 string cvs show
+  
+  %N = ceiling(l/16)
+  /N l 16 div def
+  /N N ceiling def
+  
+  0 640 moveto
+  (N = ) show
+  0 630 moveto
+  N 20 string cvs show
+  
+} def
+
+sha256
+
+%/i 0 0 add def
+
+%0 100 500 {
+%  660 moveto
+%  i 20 string cvs show
+%  /i i 100 add def
+%} for
+
+%50 660 moveto
+%test 20 string cvs show
+showpage
