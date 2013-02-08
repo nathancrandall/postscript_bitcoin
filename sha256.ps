@@ -5,11 +5,6 @@
 15 scalefont
 setfont
 
-
-%test input = "abc"
-/input (abc) def
-
-
 %helper function to concat a string together
 /concatstrings % (a) (b) -> (ab)  
 { exch dup length    
@@ -46,7 +41,6 @@ setfont
   bitshift %(x << (32-n)) (x >> n)
   or exch pop
 } def
-
 
 %Ch function defined in the SHA2 Algo
 %(x & y) ^ (~x & z)
@@ -111,6 +105,11 @@ setfont
   xor xor exch pop
 } def
 
+%grab the first 32 bits (prevent integer overflow)
+/get_sig_bits {
+  dup 4294967296 div floor
+} def
+
 /sha256 {
 
   %%%%%%%%%%%%%%%%%%
@@ -136,23 +135,28 @@ setfont
     /j 0 def % ok
     0 1 15 { % ok
       /offset i 64 mul j 4 mul add def % ok
+      offset 3 add input length lt { % ok
       /o24 input offset get 24 bitshift def % ok
       /o16 input offset 1 add get 16 bitshift def % ok
       /o8 input offset 2 add get 8 bitshift def % ok
       /o input offset 3 add get def % ok
       /final o24 o16 or o8 or o or def % ok
       M i get j final put % ok
+      } { M i get j 0 put } ifelse % ok
       /j j 1 add def % ok
     } for % ok
     /i i 1 add def % ok
   } for % ok
   
-  /sig_bits input length 1 sub 8 mul LIMIT div def % ok
-  /sig_bits sig_bits floor cvi def % ok
+  %/sig_bits input length 1 sub 8 mul LIMIT div def % ok
+  /sig_bits 0 def%sig_bits floor cvi def % ok
   /less_bits input length 1 sub 8 mul def % ok
   
   M N 1 sub get 14 sig_bits cvi put % ok
-  M N 1 sub get 15 less_bits cvi put % ok
+  M N 1 sub get 15 less_bits cvi 16#FFFFFFFF and put % ok
+  
+  0 660 moveto
+  M 0 get 0 get 20 string cvs show
   
   %%%%%%%%%%%%%%%%%%%%%
   %% HASH COMPUTATION
@@ -180,15 +184,19 @@ setfont
       /t t 1 add def % ok
     } for % ok
     
-    % W[t] = (Sha256.sigma1(W[t-2]) + W[t-7] + Sha256.sigma0(W[t-15])
-    %+ W[t-16]) & 0xffffffff;
+    % W[t] = (Sha256.sigma1(W[t-2]) + W[t-7] + Sha256.sigma0(W[t-15])+ W[t-16]) & 0xffffffff;
     /t 16 def % ok
     16 1 63 { % ok
-      /val W 2 t sub get sigma1 W 7 t sub get add W 15 t sub get sigma0 add def
-      /val val W 16 t sub get val add LIMIT and
+      %this next statement has integer overflow
+      /val W t 2 sub get sigma1 W t 7 sub get add W t 15 sub get sigma0 add W t 16 sub get add 16#FFFFFFFF and def
+      %holder = FLOOR(val/INT_MAX)
+      %val = val - (holder*INT_MAX)
+      val 4294967295 gt {
+      /holder val 4294967296 div floor def
+      /val val holder 4294967296 mul sub cvi def } if
       W t val put
       /t t 1 add def % ok
-    } % ok
+    } for % ok
     
     %%%%%%%%%%%%%%%%%%%%%%%%
     %% INIT HASH VARIABLES (complete)
