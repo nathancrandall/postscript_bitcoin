@@ -110,6 +110,35 @@ setfont
   dup 4294967296 div floor
 } def
 
+/add_o {
+	% add the 30 lsb
+	1 index
+	16#3fffffff and
+	1 index
+	16#3fffffff and
+	add
+
+	% take the carry of that
+	0 index
+	-30 bitshift
+
+	% add the 2 msb
+	3 index
+	-30 bitshift
+	3 index
+	-30 bitshift
+	add
+	add
+	30 bitshift
+
+	1 index
+	16#3fffffff and
+
+	or
+	exch pop exch pop exch pop
+} def
+
+
 /sha256 {
 
   %%%%%%%%%%%%%%%%%%
