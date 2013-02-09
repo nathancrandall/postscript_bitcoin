@@ -105,11 +105,6 @@ setfont
   xor xor exch pop
 } def
 
-%grab the first 32 bits (prevent integer overflow)
-/get_sig_bits {
-  dup 4294967296 div floor
-} def
-
 /add_o {
 	% add the 30 lsb
 	1 index
@@ -217,12 +212,7 @@ setfont
     /t 16 def % ok
     16 1 63 { % ok
       %this next statement has integer overflow
-      /val W t 2 sub get sigma1 W t 7 sub get add W t 15 sub get sigma0 add W t 16 sub get add 16#FFFFFFFF and def
-      %holder = FLOOR(val/INT_MAX)
-      %val = val - (holder*INT_MAX)
-      val 4294967295 gt {
-      /holder val 4294967296 div floor def
-      /val val holder 4294967296 mul sub cvi def } if
+      /val W t 2 sub get sigma1 W t 7 sub get add_o W t 15 sub get sigma0 add_o W t 16 sub get add_o def
       W t val put
       /t t 1 add def % ok
     } for % ok
@@ -247,16 +237,18 @@ setfont
     /t 0 def
     
     0 1 63 {
-      /T1 h e SIGMA1 add e f g Ch add K t get add W t get add def
-      /T2 a SIGMA0 a b c Maj add def
+      %T1 = h + Sha256.Sigma1(e) + Sha256.Ch(e, f, g) + K[t] + W[t];
+      /T1 h e SIGMA1 add_o e f g Ch add_o K t get add_o W t get add_o def
+      %T2 = Sha256.Sigma0(a) + Sha256.Maj(a, b, c);
+      /T2 a SIGMA0 a b c Maj add_o def
       /h g def
       /g f def
       /f e def
-      /e d T1 add LIMIT and def
+      /e d T1 add_o def
       /d c def
       /c b def
       /b a def
-      /a T1 T2 add LIMIT and def
+      /a T1 T2 add_o def
       
       /t t 1 add def
     } for    
@@ -265,29 +257,29 @@ setfont
     %% COMPUTE NEW HASH (complete)
     %%%%%%%%%%%%%%%%%%%%%
     
-    %h[i] = (h[i]+i.to_c) & 0xffffffff;
-    H 0 get a add LIMIT and
+    %h[i] = (h[i]+[a-h]) & 0xffffffff;
+    H 0 get a add_o
     H exch 0 exch put
     
-    H 1 get b add LIMIT and
+    H 1 get b add_o
     H exch 1 exch put
     
-    H 2 get c add LIMIT and
+    H 2 get c add_o
     H exch 2 exch put
     
-    H 3 get d add LIMIT and
+    H 3 get d add_o
     H exch 3 exch put
     
-    H 4 get e add LIMIT and
+    H 4 get e add_o
     H exch 4 exch put
     
-    H 5 get f add LIMIT and
+    H 5 get f add_o
     H exch 5 exch put
     
-    H 6 get g add LIMIT and
+    H 6 get g add_o
     H exch 6 exch put
     
-    H 7 get h add LIMIT and
+    H 7 get h add_o
     H exch 7 exch put
     
     /i i 1 add def
