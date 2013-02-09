@@ -155,14 +155,24 @@ setfont
     /j 0 def % ok
     0 1 15 { % ok
       /offset i 64 mul j 4 mul add def % ok
+      /o24 0 def
+      /o16 0 def
+      /o8 0 def
+      /o 0 def
+      offset input length lt {
+         /o24 input offset get 24 bitshift def % ok
+      } if
+      offset 1 add input length lt {
+        /o16 input offset 1 add get 16 bitshift def % ok
+      } if
+      offset 2 add input length lt {
+        /o8 input offset 2 add get 8 bitshift def % ok
+      } if
       offset 3 add input length lt { % ok
-      /o24 input offset get 24 bitshift def % ok
-      /o16 input offset 1 add get 16 bitshift def % ok
-      /o8 input offset 2 add get 8 bitshift def % ok
-      /o input offset 3 add get def % ok
+        /o input offset 3 add get def % ok
+      } if % ok
       /final o24 o16 or o8 or o or def % ok
       M i get j final put % ok
-      } { M i get j 0 put } ifelse % ok
       /j j 1 add def % ok
     } for % ok
     /i i 1 add def % ok
