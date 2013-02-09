@@ -185,9 +185,6 @@ setfont
   M N 1 sub get 14 sig_bits cvi put % ok
   M N 1 sub get 15 less_bits cvi 16#FFFFFFFF and put % ok
   
-  0 660 moveto
-  M 0 get 0 get 20 string cvs show
-  
   %%%%%%%%%%%%%%%%%%%%%
   %% HASH COMPUTATION
   %%%%%%%%%%%%%%%%%%%%%
@@ -279,8 +276,27 @@ setfont
     
     /i i 1 add def
   } for
+  
+  %print to the page
+  0 700 moveto
+  H 0 get 20 string cvs show
+  0 680 moveto
+  H 1 get 20 string cvs show
+  0 660 moveto
+  H 2 get 20 string cvs show
+  0 640 moveto
+  H 3 get 20 string cvs show
+  0 620 moveto
+  H 4 get 20 string cvs show
+  0 600 moveto
+  H 5 get 20 string cvs show
+  0 580 moveto
+  H 6 get 20 string cvs show
+  0 560 moveto
+  H 7 get 20 string cvs show
+  
 } def
 
-(abc) sha256
+(abcdefghijklmnopqrstuvwxyz0123456789) sha256
 
 showpage
