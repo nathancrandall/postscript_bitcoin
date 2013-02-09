@@ -15,18 +15,13 @@ setfont
 
 
 %values defined by SHA256
-/K [1116352408 1899447441 3049323471 3921009573 961987163 1508970993 2453635748 2870763221 3624381080 310598401 607225278 1426881987 
-1925078388 2162078206 2614888103 3248222580 3835390401 4022224774 264347078 604807628 770255983 1249150122 1555081692 1996064986 
-2554220882 2821834349 2952996808 3210313671 3336571891 3584528711 113926993 338241895 666307205 773529912 1294757372 1396182291 
-1695183700 1986661051 2177026350 2456956037 2730485921 2820302411 3259730800 3345764771 3516065817 3600352804 4094571909 275423344 
-430227734 506948616 659060556 883997877 958139571 1322822218 1537002063 1747873779 1955562222 2024104815 2227730452 2361852424 2428436474 
-2756734187 3204031479 3329325298] def
+/K [1116352408 1899447441 -1245643825 -373957723 961987163 1508970993 -1841331548 -1424204075 -670586216 310598401 607225278 1426881987 1925078388 -2132889090 -1680079193 
+-1046744716 -459576895 -272742522 264347078 604807628 770255983 1249150122 1555081692 1996064986 -1740746414 -1473132947 -1341970488 -1084653625 -958395405 -710438585 
+113926993 338241895 666307205 773529912 1294757372 1396182291 1695183700 1986661051 -2117940946 -1838011259 -1564481375 -1474664885 -1035236496 -949202525 -778901479 -694614492 
+-200395387 275423344 430227734 506948616 659060556 883997877 958139571 1322822218 1537002063 1747873779 1955562222 2024104815 -2067236844 -1933114872 -1866530822 -1538233109 
+-1090935817 -965641998] def
 
 /LIMIT 4294967295 def %0xffffffff
-
-
-%initial SHA256 values
-/H [1779033703 3144134277 1013904242 2773480762 1359893119 2600822924 528734635 1541459225] def
 
 %rotate the bits right
 % (x >> n) | (x << (32-n))
@@ -49,8 +44,7 @@ setfont
   2 index 2 index %y x z y x
   and %(x & y) z y x
   3 index not 2 index and xor
-  count 1 roll
-  pop pop pop
+  exch pop exch pop exch pop 
 } def
 
 %Maj function defined in the SHA2 Algo
@@ -61,8 +55,7 @@ setfont
   3 index 2 index and %(x & z)
   3 index 3 index and %(y & z)
   xor xor %answer
-  count 1 roll
-  pop pop pop
+  exch pop exch pop exch pop 
 } def
 
 %function defined in the SHA2 Algo
@@ -139,6 +132,9 @@ setfont
   %%%%%%%%%%%%%%%%%%
   %% PREPROCESSING (complete)
   %%%%%%%%%%%%%%%%%%
+  
+  %initial SHA256 values
+  /H [1779033703 -1150833019 1013904242 -1521486534 1359893119 -1694144372 528734635 1541459225] def
 
   %first need to append 0x80 to input (I think € = 0x80, but could be wrong)
   (€) concatstrings % ok
@@ -235,12 +231,15 @@ setfont
     %%%%%%%%%%%%%%
     
     /t 0 def
-    
+    clear
     0 1 63 {
+      pop
       %T1 = h + Sha256.Sigma1(e) + Sha256.Ch(e, f, g) + K[t] + W[t];
-      /T1 h e SIGMA1 add_o e f g Ch add_o K t get add_o W t get add_o def
+      h e SIGMA1 add_o e f g Ch add_o K t get add_o W t get add_o
+      /T1 exch def
       %T2 = Sha256.Sigma0(a) + Sha256.Maj(a, b, c);
-      /T2 a SIGMA0 a b c Maj add_o def
+      a SIGMA0 a b c Maj add_o
+      /T2 exch def
       /h g def
       /g f def
       /f e def
@@ -258,29 +257,15 @@ setfont
     %%%%%%%%%%%%%%%%%%%%%
     
     %h[i] = (h[i]+[a-h]) & 0xffffffff;
-    H 0 get a add_o
-    H exch 0 exch put
     
-    H 1 get b add_o
-    H exch 1 exch put
-    
-    H 2 get c add_o
-    H exch 2 exch put
-    
-    H 3 get d add_o
-    H exch 3 exch put
-    
-    H 4 get e add_o
-    H exch 4 exch put
-    
-    H 5 get f add_o
-    H exch 5 exch put
-    
-    H 6 get g add_o
-    H exch 6 exch put
-    
-    H 7 get h add_o
-    H exch 7 exch put
+    H 0 H 0 get a add_o put
+    H 1 H 1 get b add_o put
+    H 2 H 2 get c add_o put
+    H 3 H 3 get d add_o put
+    H 4 H 4 get e add_o put
+    H 5 H 5 get f add_o put
+    H 6 H 6 get g add_o put
+    H 7 H 7 get h add_o put
     
     /i i 1 add def
   } for
