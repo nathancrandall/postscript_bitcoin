@@ -277,26 +277,139 @@ setfont
     /i i 1 add def
   } for
   
+  %put hash output onto the stack
+  /t 7 def
+  0 1 7 {
+    pop
+    H t get
+    /t t 1 sub def
+  } for
+  
   %print to the page
-  0 700 moveto
-  H 0 get 20 string cvs show
-  0 680 moveto
-  H 1 get 20 string cvs show
-  0 660 moveto
-  H 2 get 20 string cvs show
-  0 640 moveto
-  H 3 get 20 string cvs show
-  0 620 moveto
-  H 4 get 20 string cvs show
-  0 600 moveto
-  H 5 get 20 string cvs show
-  0 580 moveto
-  H 6 get 20 string cvs show
-  0 560 moveto
-  H 7 get 20 string cvs show
+  %0 700 moveto
+  %H 0 get 20 string cvs show
+  %0 680 moveto
+  %H 1 get 20 string cvs show
+  %0 660 moveto
+  %H 2 get 20 string cvs show
+  %0 640 moveto
+  %H 3 get 20 string cvs show
+  %0 620 moveto
+  %H 4 get 20 string cvs show
+  %0 600 moveto
+  %H 5 get 20 string cvs show
+  %0 580 moveto
+  %H 6 get 20 string cvs show
+  %0 560 moveto
+  %H 7 get 20 string cvs show
   
 } def
 
-(abcdefghijklmnopqrstuvwxyz0123456789) sha256
+%usage: <number> convert_bin_to_string
+%result: string of 4  char bytes
+/convert_bin_to_string {
+  /input exch def
+  %first byte
+  /byte1 input -24 bitshift def
+  %second byte
+  /byte2 input 8 bitshift -24 bitshift def
+  %third byte
+  /byte3 input 16 bitshift -24 bitshift def
+  %fourth byte
+  /byte4 input 24 bitshift -24 bitshift def
+  /ret (1234) def
+  ret 0 byte1 put
+  ret 1 byte2 put
+  ret 2 byte3 put
+  ret 3 byte4 put
+  ret
+} def
 
-showpage
+%mining algorithm is as follows:
+%construct a block header of 80bytes, where the last 4 bytes are a nonce value that constantly changes in the mining loop.
+%find the target value
+% begin the nonce loop
+%%compute SHA256(SHA256(block_header))
+% if our hash is less than the target value, then we've succeeded.
+/mine {
+  %block header:
+  %version (4 bytes)
+  %hashPrevBlock (32 bytes)
+  %hashMerkleRoot (32 bytes)
+  %time (4 bytes)
+  %bits (target) (4 bytes)
+  %nonce (4 bytes)
+  
+  %%%%%%%%%%%%%%%%%%%%%%%
+  %% CONSTRUCT HEADER
+  %%%%%%%%%%%%%%%%%%%%%%%
+  
+  %set the values
+  
+  /target_hash 8 array def
+  /i 0 def
+  0 1 7 {
+    pop
+    target_hash i 0 put
+    /i i 1 add def
+  } for
+  
+  /bversion 0 def
+  /hashPrevBlock 32 array def
+  /hashMerkleRoot 32 array def
+  /time 0 def
+  /bits 0 def
+  /nonce_bin 0 def
+  /sprev () def
+  /smerkle () def
+  %now convert them to a string that has the same binary representation
+  /bversion bversion convert_bin_to_string def
+  /i 0 def
+  0 1 31 {
+    pop
+    hashPrevBlock i 0 put
+    hashMerkleRoot i 0 put
+    /sprev sprev hashPrevBlock i get convert_bin_to_string concatstrings def
+    /smerkle smerkle hashMerkleRoot i get convert_bin_to_string concatstrings def
+    /i i 1 add def
+  } for
+  /time time convert_bin_to_string def
+  /bits bits convert_bin_to_string def
+  
+  /block_header bversion sprev concatstrings smerkle concatstrings time concatstrings bits concatstrings def
+  
+  {
+    /nonce nonce_bin convert_bin_to_string def
+    /nonce_bin nonce_bin 1 add def
+  
+    /block_header block_header nonce concatstrings def
+    block_header sha256
+    /shash () def
+    /i 0 def
+    0 1 7 {
+      pop
+      /current exch def
+      /shash shash current convert_bin_to_string concatstrings def
+    } for
+    shash sha256 %now computing SHA256(SHA256(block_header))
+    /shash () def
+    0 1 7 {
+      pop
+      /current exch def
+      /shash shash current convert_bin_to_string concatstrings def
+    } for
+    shash sha256 %this is our final hash value
+    
+    0 index target_hash 0 get lt {
+      exit %we found the hash, so exit
+    } if
+    
+    clear
+  } loop
+  
+  
+} def
+
+%(C:\\Users\\Nathan\\My Documents\\postscript_bitcoin\\sha256.ps) run
+%JS implementation runs in 54.5s
+%our implementation runs in 
