@@ -137,9 +137,10 @@ setfont
   /H [1779033703 -1150833019 1013904242 -1521486534 1359893119 -1694144372 528734635 1541459225] def
 
   %first need to append 0x80 to input (I think € = 0x80, but could be wrong)
-  (€) concatstrings % ok
-  
+  %(€) concatstrings % ok
+  (a) concatstrings
   /input exch def % ok
+  input input length 1 sub 128 put
   /l input length 4 div 2 add cvi def % ok
   /N l 16 div ceiling cvi def % ok
   /M N array def % ok
@@ -286,24 +287,25 @@ setfont
   } for
   
   %print to the page
-  %0 700 moveto
-  %H 0 get 20 string cvs show
-  %0 680 moveto
-  %H 1 get 20 string cvs show
-  %0 660 moveto
-  %H 2 get 20 string cvs show
-  %0 640 moveto
-  %H 3 get 20 string cvs show
-  %0 620 moveto
-  %H 4 get 20 string cvs show
-  %0 600 moveto
-  %H 5 get 20 string cvs show
-  %0 580 moveto
-  %H 6 get 20 string cvs show
-  %0 560 moveto
-  %H 7 get 20 string cvs show
+  0 700 moveto
+  H 0 get 20 string cvs show
+  0 680 moveto
+  H 1 get 20 string cvs show
+  0 660 moveto
+  H 2 get 20 string cvs show
+  0 640 moveto
+  H 3 get 20 string cvs show
+  0 620 moveto
+  H 4 get 20 string cvs show
+  0 600 moveto
+  H 5 get 20 string cvs show
+  0 580 moveto
+  H 6 get 20 string cvs show
+  0 560 moveto
+  H 7 get 20 string cvs show
   
 } def
+(abc) sha256
 
 %usage: <number> convert_bin_to_string
 %result: string of 4  char bytes
