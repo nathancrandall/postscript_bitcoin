@@ -1,0 +1,18 @@
+\section{Evaluation}
+
+Our initial benchmarks for the SHA-256 algorithm were not very promising when running a PostScript interpreter on a computer, as the results were approximately 1200 hashes/second.
+Even worse, a standard HP printer executed our SHA-256 script at approximately 48 hashes/second.
+Printing hardware was clearly not designed for computationally intensive programs.
+This number is extremely low compared to the hash rate of  GPU’s or bitcoin mining rigs.
+Therefore, we went back to our initial implementation of the hashing script and rewrote it as an optimized version, taking advantage of PostScript’s built in stack as opposed to heavily relying on the user-defined dictionary we were originally using.
+After this was complete, the difference was lackluster, raising our hash rate to 52 hashes/second.
+
+Due to these disappointing benchmarks, we did not proceed to implement the command and control server that would distribute the PS files to the printers.
+With 124,000 printers available, and perfect job scheduling, our server would theoretically achieve a hash rate of 5.2 megahashes/second.
+This hash rate does, however, outperform older and lower-end CPU’s.
+The attacker would also not have to pay for any type of electrical bill, or perform any type of maintenance on hardware.
+Therefore, this type of attack does have lucrative benefits, albeit small ones.
+
+\begin{table}
+\label{bitcoin_hardware}
+\end{table}

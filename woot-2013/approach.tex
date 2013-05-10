@@ -1,0 +1,33 @@
+\section{Approach}
+
+The Google search engine has a useful search operator labeled “inurl,”  which works by filtering out any results that contain a substring of the argument passed in.
+This syntax can be used in such a way to locate specific devices and files that are indexed in Google.
+HP printers that have a web interface all contain the same path, specifically “hp/device/this.LCDispatcher?nav=hp.Print.”  If you pass this string into Google with the “inurl” operator, approximately 124,000 results are returned that all point to public facing HP printing devices.
+
+Now that we had a comprehensive list of printers that were vulnerable, our next step was to figure out what kind of performance we could expect from a printer running a hashing computation.
+Since most printers accept PostScript (PS) files, PS was the obvious choice to write a hash script due to its feature of being Turing-complete.
+Unfortunately, PS does not support 64-bit integers.
+The data type options are limited to either 32-bit integers or 64-bit floating point numbers.
+This was a problem because of potential integer overflow during the hashing computation, since many of the bits are rotated and then added together.
+To account for this issue, we created a custom add operation that was overflow-safe.
+The ultimate goal of the add operation was to perform the following: $(a + b) \& 0xFFFFFFFF$ (see Table~\ref{overflow_add}).
+
+\begin{table}
+\label{overflow_add}
+\end{table}
+
+Although this solved the problem, our add operation had now increased from one instruction to ten instructions.
+This would be a performance loss due to the fact that this add operation needs to be called exactly 600 times per hash, which means that instead of computing 600 add operations, the printer will have to now perform 6,000 instructions for the same output.
+However, the hashing script was complete and outputting correct results.
+
+We now had to retrieve the hash results from the printer once the PS file was sent out.
+There are two reasons this is difficult: 1) Printer’s, by default, have a timeout of 5 minutes per job.
+2) PostScript has no API or functionality for sockets, so we cannot communicate the results directly back to the sender.
+We knew, however, that some type of error packet would have to be sent back to let the client know that a print job had failed.
+To get a printing job to fail, we simply put in incorrect syntax in a conditional block that signified whether or not the hashing computation was complete.
+This works because PostScript is not compiled, meaning that the error will only be encountered the moment that the incorrect line is supposed to be executed.
+
+Our functionality at this point was sending hashing jobs to the printer and receiving a flag for when the job was completed which is of little use because the actual hash values are not returned.
+However, since bitcoin values have a target value and printing hardware is orders of magnitude slower than computing hardware, our process could easily recompute the target hash for a bitcoin value very quickly.
+Due to the five minute time limit on printing jobs, our process would start out with a nonce value that was very close to the bitcoin’s nonce value.
+Just how much overlapping work would the printer and our application perform?

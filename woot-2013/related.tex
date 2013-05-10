@@ -1,0 +1,40 @@
+\section{Background}
+
+The cryptographic currency, Bitcoin, is based upon the cryptographically secure hashing algorithm, SHA-256, which is part of the SHA-2 family.
+SHA-256 takes a variable sized input and spits out a unique 256-bit output.
+Bitcoin is a decentralized electronic currency that is operated through a peer-to-peer network and aims to prevent double spending through a hash-based proof-of-work.
+Bitcoin values are calculated through the following steps: the Bitcoin protocol first finds other Bitcoin nodes to figure out important information such as what Bitcoin block is currently being mined.
+After, the block header is constructed.
+This header contains 80 bytes of information about the current block, such as the version, timestamp, nonce, and target value (see Table~\ref{bitcoin_header}).
+
+Once all of this information has been assembled, the 80-byte block header is hashed via SHA-256.
+The output of this hash is then hashed once more through SHA-256.
+If the hash value found is less than the target value, then that signals that a bitcoin value has been found.
+Otherwise, the nonce value is incremented and the process is repeated until a bitcoin value is discovered.
+
+Bitcoin self-regulates itself through the use of an ever increasing difficulty.
+Every time a block (a block is all of the bitcoin values that can be mined from the same block header)  is mined, the difficulty of finding a proper bitcoin value is increased.
+This prevents Moore’s law from ruining the value of Bitcoins; even if hardware power increases exponentially, the difficulty of finding Bitcoins will become exponentially more difficult as well.
+Bitcoin values also provide proof-of-work which verifies that the values are legitimate.
+
+\begin{table}
+\label{bitcoin_header}
+TODO: table for bitcoin
+\end{table}
+
+
+
+\begin{table}
+\label{printer_dorks}
+\begin{tabular}{r| l | l}
+    \hline
+    \hline
+    {\bf Printer series} & {\bf Google search query} & {\bf Printer count} \\
+    \hline
+    Brother HL & inurl:"printer/main.html" intext:"settings" & 4,310 \\
+    Samsung CLX & allintitle:"SyncThru Web Service" & 8 \\
+    Xerox Phaser 6250 & "Phaser 6250" "Printer Neighborhood" "XEROX CORPORATION. All Rights Reserved." & 472 \\
+
+    \hline
+\end{tabular}
+\end{table}

@@ -1,0 +1,16 @@
+\begin{abstract}
+
+Printers are a prevalent piece of hardware in all types of networks - home, business, or educational.
+They are an invaluable tool in bridging the divide between digital and physical documents, but often times these devices are not given the attention they need.
+Thousands of printers can be discovered online through a quick and simple Google search, revealing that these devices do not require any form of authentication and are publicly available.
+This leaves them wide open to a variety of exploitations.
+
+In this paper, we show how public-facing printers can be taken advantage of through the use of bitcoin operations.
+By using the PostScript language, printers can become slaves to whatever computation is hidden inside of a PostScript file.
+To show this, we crafted a PostScript file that computes the SHA-256 function, which is the cornerstone of the bitcoin mining algorithm.
+
+In addition, we show how one can retrieve computational results from a printer without having a 2-way channel of communication available.
+Our method of retrieving results involves the use of heuristics to reconstruct the bitcoin values a certain printer has found.
+By showing that a printer is capable of these operations, we demonstrate that one can gain considerable computational power by creating a network of printers to do computational operations at the sender’s discretion.
+
+\end{abstract}

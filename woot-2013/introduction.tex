@@ -1,0 +1,17 @@
+\section{Introduction}
+
+Printers are pieces of hardware that are never given much attention as long as they are working properly and filled with paper.
+Unfortunately, this also means that they are not given much thought when it comes to security.
+Modern printers now come packaged with data storage, full Internet-Protocol stacks, and embedded operating systems[1].
+Clearly these devices are far more powerful than they used to be just a decade ago.
+By accessing a printer, an attacker can glean important information about the network it resides on, such as software versions, firmware versions, and printed documents.
+In addition, an attacker can easily perform a denial-of-service attack against the printer with a maliciously crafted PostScript file.
+This paper takes a different direction by using the printers for their available resources, rather than their exploitative abilities.
+
+Google reveals that there are approximately 124,000 Hewlett-Packard (HP) printers with public IP addresses right now[2].
+This number will continuously grow, since just one month ago there were only 105,000.
+If the number of publicly available printers keeps increasing, this means that there is a constantly growing amount of computational power.
+This computational power also goes unused, as printing jobs are not computationally intensive most of the time, and printers are only used for specific events; they are sparingly used in terms of time.
+This means that these devices are free for the majority of the time that they are active.
+
+In this paper, 
