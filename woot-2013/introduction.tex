@@ -1,22 +1,31 @@
 \section{Introduction}
 
-Printers are pieces of hardware that are never given much attention as long as they are working properly and filled with paper.
-Unfortunately, this also means that they are not given much thought when it comes to security.
-Modern printers now come packaged with data storage, full Internet-Protocol stacks, and embedded operating systems[1].
-Clearly these devices are far more powerful than they used to be just a decade ago.
-By accessing a printer, an attacker can glean important information about the network it resides on, such as software versions, firmware versions, and printed documents.
-In addition, an attacker can easily perform a denial-of-service attack against the printer with a maliciously crafted PostScript file.
-This paper takes a different direction by using the printers for their available resources, rather than their exploitative abilities.
+Every large modern organization hosts and relies on a large number of printers in the course of everyday business.
+Printers are used in academia to print forms and academic papers, in business to print business documents, and in person life to print records and photographs.
+These devices have grown increasingly powerful in recent years as technology has progressed.
+Modern printers often have touchscreen user interfaces, can interface with memory cards and USB flash drives, and, importantly, can accept print jobs from network devices.
+However, these printers are never given much attention as long as they are working properly and filled with paper.
+This means that these devices, with constantly increasing connectivity, are not given much thought when it comes to security.
 
-Google reveals that there are approximately 124,000 Hewlett-Packard (HP) printers with public IP addresses right now[2].
-This number will continuously grow, since just one month ago there were only 105,000.
-If the number of publicly available printers keeps increasing, this means that there is a constantly growing amount of computational power.
-This computational power also goes unused, as printing jobs are not computationally intensive most of the time, and printers are only used for specific events; they are sparingly used in terms of time.
-This means that these devices are free for the majority of the time that they are active.
+In fact, the compromising of network printers has become an increasingly important issue~\cite{hacking_network_printers}.
+To demonstrate this danger, researchers from Columbia University developed a custom firmware that would cause the printer to overheat as a proof of the danger~\cite{printer_fire}.
+Aside from wreaking such physical havoc, by accessing an unsecured printer, an attacker can glean important information about the network on which it resides, such as the IP address scheme and number of printed documents.
+In fact, some printers even allow such documents to be retrieved for data exfiltration.
+In addition, an attacker can easily perform a denial-of-service attack against the printer by keeping it busy with bogus jobs.
+However, rather than exploring the ways in which printers can be used to attack a network, this paper focus on utilizing them for a different purpose: a direct monetary benefit to the attacker.
 
-In this paper, we investigate the usefulness of using printers as computational hardware in a bitcoin mining operation.
-We explore how bitcoin values are constructed through the cryptographic hashing function, SHA-256.
-Next, we explain how public printing devices can be found quickly and easily through the use of the Google search engine and its features.
+Many printers utilize the PostScript programming language~\cite{postscript} as a document descriptor language.
+We had the insight that, since PostScript is a Turing-complete language, it should be possible to perform arbitrary computation in a given print job.
+As long as feedback could be received from the printer about the status of the job, an approach could be developed that would allow printers to be used as computation nodes.
+In fact, a recent report from Sophos~\cite{internet_printers} revealed that there are at least 86,800 Hewlett-Packard printers connected directly to the internet, with no access control to keep an attacker from submitting print jobs.
+In recent months, this number has increased, and over 94,000 printers are accessible using this method.
+If the number of such publicly available printers continues to increase, it would provide a constantly growing amount of computational power for an attacker.
+This computational power goes mostly unused in a printer's normal workflow, as most print jobs are not computationally intensive, and printers are generally used sparingly.
+This means that, the majority of time, these devices are available for use as computation nodes without being noticed by their owners.
+
+In this paper, we investigate the usefulness of using printers as computational hardware for a specific application: as workers in a Bitcoin~\cite{nakamoto2008bitcoin} mining operation.
+We use these workers to carry out hashing operations, as Bitcoin mining consists of computing SHA-256 hashes.
+We summarize existing data as to how public printing devices can be found quickly and easily through the use of the Google search engine and its features.
 Once these printers are found, we explain how these devices can be given any type of computational task and perform it, all through the use of the page description language, PostScript.
-Finally, we review a printer’s performance for the SHA-256 hash function and compare it to other devices that are popular in bitcoin mining communities.
+Finally, we review a printer's performance for the SHA-256 hash function and compare it to other devices that are popular in Bitcoin mining communities.
 
