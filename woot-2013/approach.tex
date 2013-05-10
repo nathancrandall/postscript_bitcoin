@@ -15,32 +15,37 @@ Since we had access to an HP LaserJet printer, and such printers appear to be th
 However, it is important to note that, with minimal additional work, an attacker could send print jobs to \emph{multiple} models of printers.
 By developing improved Google Dorks for more effective printer identification, the computational power available to an attacker could greatly increase.
 
-\subsubsection{Printer Communication}
+\subsection{Printer Communication}
 
 One hurdle we had to overcome was the actual communication with the printer.
 Namely, the communication has to be two-way: print jobs must be sent, and at least a single bit of output (whether or not the hash was successful) has to be received.
-The latter is difficult because PostScript has no API or functionality for network communication, so we cannot communicate the results directly back to the sender.
+For the first issue, we were able to submit print jobs to our HP LaserJet over its web interface, making job dispatching quite simple.
+
+The latter issue is more difficult to address because PostScript has no API or functionality for network communication, so we cannot communicate the results directly back to the sender.
 We suspected, however, that some type of error notification would have to be sent back to let the client know that a print job had failed.
 Indeed, we discovered that if a print job was submitted via the HP LaserJet's web interface, and if that print job failed due to a runtime PostScript error, a notification would be returned to the user.
 This works in part because PostScript is interpreted, as opposed to being compiled, meaning that the error will only be encountered when the incorrect line is executed.
+Thus, if we wanted to send a notification back from a print job, we would attempt to call a PostScript function containing invalid PostScript.
+This would cause the print job to fail, and the error message to be sent to the command and control node.
 
+Additional care had to be taken to avoid job timeouts.
+Under the default configuration for our printer, print jobs would time out after 5 minutes.
+The number of values to hash had to be carefully controlled to avoid triggering this timeout.
 
-We now had to retrieve the hash results from the printer once the PS file was sent out.
-There are two reasons this is difficult: 1) Printer’s, by default, have a timeout of 5 minutes per job.
-To get a printing job to fail, we simply put in incorrect syntax in a conditional block that signified whether or not the hashing computation was complete.
+\subsection{Bitcoin Mining}
 
-Our functionality at this point was sending hashing jobs to the printer and receiving a flag for when the job was completed which is of little use because the actual hash values are not returned.
-However, since bitcoin values have a target value and printing hardware is orders of magnitude slower than computing hardware, our process could easily recompute the target hash for a bitcoin value very quickly.
-Due to the five minute time limit on printing jobs, our process would start out with a nonce value that was very close to the bitcoin’s nonce value.
-Just how much overlapping work would the printer and our application perform?
+With the printer communication issues addressed, we could continue to the Bitcoin mining step.
+The Bitcoin mining process consists of guessing a nonce value that would result in the hash of a given header containing a contiguous bit-string of 0s.
+Since most printers can execute PostScript files, we implemented the SHA-256 algorithm in PostScript to parallelize this process across multiple printer workers.
+Each print job would contain the SHA-256 implementation, a Bitcoin block header, and a list of nonce values that had to be checked.
 
-Now that we had a comprehensive list of printers that were vulnerable, our next step was to figure out what kind of performance we could expect from a printer running a hashing computation.
-Since most printers accept PostScript (PS) files, PS was the obvious choice to write a hash script due to its feature of being Turing-complete.
-Unfortunately, PS does not support 64-bit integers.
-The data type options are limited to either 32-bit integers or 64-bit floating point numbers.
+One hurdle we encountered was the lack of PostScript support for 64-bit integers.
+In fact, once an integer required more than 31 bits to store, PostScript automatically converted it into a 64-bit floating point number.
+Once this happened, such variables could no longer used in bit operations.
 This was a problem because of potential integer overflow during the hashing computation, since many of the bits are rotated and then added together.
 To account for this issue, we created a custom add operation that was overflow-safe.
-The ultimate goal of the add operation was to perform the following: $(a + b) \& 0xFFFFFFFF$ (see Table~\ref{overflow_add}).
+The ultimate goal of the add operation was to perform the following: $(a + b) \& 0xFFFFFFFF$.
+This implementation, which splits off the most significant bits of both integers in question, is displayed in Table~\ref{overflow_add}.
 
 \begin{table}
 \label{overflow_add}
@@ -72,7 +77,9 @@ The ultimate goal of the add operation was to perform the following: $(a + b) \&
 \caption{An overflow-safe 32-bit add operation in PostScript. The two integers are split up into the most significant two bits and the least significant thirty bits, the addition is carried out separately on the different parts, and the results are recombined.}
 \end{table}
 
-Although this solved the problem, our add operation had now increased from one instruction to ten instructions.
-This would be a performance loss due to the fact that this add operation needs to be called exactly 600 times per hash, which means that instead of computing 600 add operations, the printer will have to now perform 6,000 instructions for the same output.
-However, the hashing script was complete and outputting correct results.
+Although this solved the overflow issue, each add operation increased from one instruction to ten instructions.
+This is a performance loss due to the fact that this add operation needs to be called exactly 600 times per hash, which means that instead of computing 600 add operations, the printer will have to now perform 6,000 instructions for the same output.
 
+Since we could only receive a single-bit response (whether the print job completed or failed), we simply had the print job fail if it detected the requisite 0 bit-string.
+Upon receipt of such a failure, the command and control node would search through the set of nonce values that the print job had contained to determine \emph{which} nonce value was responsible for the correct hash.
+Once this was determined, the Bitcoin is considered to have been successfully mined.
