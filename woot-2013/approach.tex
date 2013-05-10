@@ -14,6 +14,14 @@ The ultimate goal of the add operation was to perform the following: $(a + b) \&
 
 \begin{table}
 \label{overflow_add}
+\begin{tabular}{r}
+Let x, y be the input.
+a -> x & 0x3FFFFFFF
+b -> y & 0x3FFFFFFF
+z -> a +b
+w -> (x >> 30) + (y >> 30) + (z >> 30)
+Solution: z | (w<< 30)
+\end{tabular}
 \end{table}
 
 Although this solved the problem, our add operation had now increased from one instruction to ten instructions.

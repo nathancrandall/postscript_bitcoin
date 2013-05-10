@@ -19,7 +19,20 @@ Bitcoin values also provide proof-of-work which verifies that the values are leg
 
 \begin{table}
 \label{bitcoin_header}
-TODO: table for bitcoin
+\begin{tabular}{r| p{9cm} | r}
+  \hline
+  \hline
+  {\bf Field} & {\bf Description} & {\bf No. of Bytes} \\
+  \hline
+  Version & Version of Software & 4 \\
+  HashPrevBlock & Hash of the previous block header & 32 \\
+  HashMerkleRoot & Hash based on all transactions in the block & 32 \\
+  Time & Epoch Time & 4 \\
+  Bits & Current target value & 4 \\
+  Nonce & 32-bit integer & 4 \\
+  {\bf Total} & & 80 \\
+  \hline
+\end{tabular}
 \end{table}
 
 
