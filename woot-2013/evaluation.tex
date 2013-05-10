@@ -1,18 +1,15 @@
 \section{Evaluation}
 
-Our initial benchmarks for the SHA-256 algorithm were not very promising when running a PostScript interpreter on a computer, as the results were approximately 1200 hashes/second.
-Even worse, a standard HP printer executed our SHA-256 script at approximately 48 hashes/second.
+Our initial benchmarks for the PostScript implementation of the SHA-256 algorithm were not very promising when running a PostScript interpreter on a personal computer, as the result was approximately 1,200 hashes/second.
+Unfortunately, our HP LaserJet P3015 printer executed our SHA-256 script even slower: approximately 48 hashes/second.
 Printing hardware was clearly not designed for computationally intensive programs.
-This number is extremely low compared to the hash rate of  GPU’s or bitcoin mining rigs.
+
+This number is extremely low compared to the hash rate of GPUs or specific Bitcoin mining ASICs\footnote{A comparison of mining hardware can be found at https://en.bitcoin.it/wiki/Mining\_hardware\_comparison}.
 Therefore, we went back to our initial implementation of the hashing script and rewrote it as an optimized version, taking advantage of PostScript’s built in stack as opposed to heavily relying on the user-defined dictionary we were originally using.
 After this was complete, the difference was lackluster, raising our hash rate to 52 hashes/second.
 
-Due to these disappointing benchmarks, we did not proceed to implement the command and control server that would distribute the PS files to the printers.
-With 124,000 printers available, and perfect job scheduling, our server would theoretically achieve a hash rate of 5.2 megahashes/second.
-This hash rate does, however, outperform older and lower-end CPU’s.
-The attacker would also not have to pay for any type of electrical bill, or perform any type of maintenance on hardware.
+Due to ethical concerns, we were unable to evaluate the performance of our approach when parallelized to network-connected printers.
+However, with almost 120,000 printers available on the internet, our server could theoretically achieve a hash rate of 6.2 million hashes per second.
+This hash rate does, however, outperform older and lower-end CPUs, without utilizing the computing power of the attacker's machines.
+Thus, the attacker would also not have to pay for any type of electrical bill, or perform any type of maintenance on hardware.
 Therefore, this type of attack does have lucrative benefits, albeit small ones.
-
-\begin{table}
-\label{bitcoin_hardware}
-\end{table}
