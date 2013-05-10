@@ -1,8 +1,38 @@
 \section{Approach}
 
-The Google search engine has a useful search operator labeled “inurl,”  which works by filtering out any results that contain a substring of the argument passed in.
-This syntax can be used in such a way to locate specific devices and files that are indexed in Google.
-HP printers that have a web interface all contain the same path, specifically “hp/device/this.LCDispatcher?nav=hp.Print.”  If you pass this string into Google with the “inurl” operator, approximately 124,000 results are returned that all point to public facing HP printing devices.
+A complete implementation of our approach, which we were unable to deploy due to ethical concerns, would take the form of three major steps.
+First, insecure network printers would be identified and accessed.
+Then, a master command and control node would deploy ``print jobs'' to these printers, containing a PostScript implementation of SHA-256 and a set of values to check in the course of mining a Bitcoin.
+If one of the print jobs signals a successful result, the master node recalculates hashes for the values that had been sent to that print job to determine exactly which value produces the correct hash.
+
+\subsection{Printer Identification}
+
+The identification of printers can be accomplished by using an online search engine, as described in Section~\ref{background}.
+We decided to use Google as opposed to a search engine specifically designed for finding vulnerable devices, and collected a number of Google Dorks for the identification of specific series of printers.
+We present these Google Dorks in Table~\ref{printer_dorks}, 
+Since we had access to an HP LaserJet printer, and such printers appear to be the most numerous and available on the internet, we decided to focus our implementation on this series of printers.
+
+However, it is important to note that, with minimal additional work, an attacker could send print jobs to \emph{multiple} models of printers.
+By developing improved Google Dorks for more effective printer identification, the computational power available to an attacker could greatly increase.
+
+\subsubsection{Printer Communication}
+
+One hurdle we had to overcome was the actual communication with the printer.
+Namely, the communication has to be two-way: print jobs must be sent, and at least a single bit of output (whether or not the hash was successful) has to be received.
+The latter is difficult because PostScript has no API or functionality for network communication, so we cannot communicate the results directly back to the sender.
+We suspected, however, that some type of error notification would have to be sent back to let the client know that a print job had failed.
+Indeed, we discovered that if a print job was submitted via the HP LaserJet's web interface, and if that print job failed due to a runtime PostScript error, a notification would be returned to the user.
+This works in part because PostScript is interpreted, as opposed to being compiled, meaning that the error will only be encountered when the incorrect line is executed.
+
+
+We now had to retrieve the hash results from the printer once the PS file was sent out.
+There are two reasons this is difficult: 1) Printer’s, by default, have a timeout of 5 minutes per job.
+To get a printing job to fail, we simply put in incorrect syntax in a conditional block that signified whether or not the hashing computation was complete.
+
+Our functionality at this point was sending hashing jobs to the printer and receiving a flag for when the job was completed which is of little use because the actual hash values are not returned.
+However, since bitcoin values have a target value and printing hardware is orders of magnitude slower than computing hardware, our process could easily recompute the target hash for a bitcoin value very quickly.
+Due to the five minute time limit on printing jobs, our process would start out with a nonce value that was very close to the bitcoin’s nonce value.
+Just how much overlapping work would the printer and our application perform?
 
 Now that we had a comprehensive list of printers that were vulnerable, our next step was to figure out what kind of performance we could expect from a printer running a hashing computation.
 Since most printers accept PostScript (PS) files, PS was the obvious choice to write a hash script due to its feature of being Turing-complete.
@@ -14,28 +44,35 @@ The ultimate goal of the add operation was to perform the following: $(a + b) \&
 
 \begin{table}
 \label{overflow_add}
-\begin{tabular}{r}
-Let x, y be the input.
-a -> x & 0x3FFFFFFF
-b -> y & 0x3FFFFFFF
-z -> a +b
-w -> (x >> 30) + (y >> 30) + (z >> 30)
-Solution: z | (w<< 30)
-\end{tabular}
+\begin{verbatim}
+/add_o {
+	% add the 30 lsb
+	1 index
+	16#3fffffff and
+	1 index
+	16#3fffffff and
+	add
+	% take the carry of that
+	0 index
+	-30 bitshift
+	% add the 2 msb
+	3 index
+	-30 bitshift
+	3 index
+	-30 bitshift
+	add
+	add
+	30 bitshift
+	1 index
+	16#3fffffff and
+	or
+	exch pop exch pop exch pop
+} def
+\end{verbatim}
+\caption{An overflow-safe 32-bit add operation in PostScript. The two integers are split up into the most significant two bits and the least significant thirty bits, the addition is carried out separately on the different parts, and the results are recombined.}
 \end{table}
 
 Although this solved the problem, our add operation had now increased from one instruction to ten instructions.
 This would be a performance loss due to the fact that this add operation needs to be called exactly 600 times per hash, which means that instead of computing 600 add operations, the printer will have to now perform 6,000 instructions for the same output.
 However, the hashing script was complete and outputting correct results.
 
-We now had to retrieve the hash results from the printer once the PS file was sent out.
-There are two reasons this is difficult: 1) Printer’s, by default, have a timeout of 5 minutes per job.
-2) PostScript has no API or functionality for sockets, so we cannot communicate the results directly back to the sender.
-We knew, however, that some type of error packet would have to be sent back to let the client know that a print job had failed.
-To get a printing job to fail, we simply put in incorrect syntax in a conditional block that signified whether or not the hashing computation was complete.
-This works because PostScript is not compiled, meaning that the error will only be encountered the moment that the incorrect line is supposed to be executed.
-
-Our functionality at this point was sending hashing jobs to the printer and receiving a flag for when the job was completed which is of little use because the actual hash values are not returned.
-However, since bitcoin values have a target value and printing hardware is orders of magnitude slower than computing hardware, our process could easily recompute the target hash for a bitcoin value very quickly.
-Due to the five minute time limit on printing jobs, our process would start out with a nonce value that was very close to the bitcoin’s nonce value.
-Just how much overlapping work would the printer and our application perform?

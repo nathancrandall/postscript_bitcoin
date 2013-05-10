@@ -17,7 +17,8 @@ Every time a block (a block is all of the bitcoin values that can be mined from 
 This prevents Moore’s law from ruining the value of Bitcoins; even if hardware power increases exponentially, the difficulty of finding Bitcoins will become exponentially more difficult as well.
 Bitcoin values also provide proof-of-work which verifies that the values are legitimate.
 
-\begin{table}
+\begin{table*}
+    \centering
 \label{bitcoin_header}
 \begin{tabular}{r| p{9cm} | r}
   \hline
@@ -30,13 +31,13 @@ Bitcoin values also provide proof-of-work which verifies that the values are leg
   Time & Epoch Time & 4 \\
   Bits & Current target value & 4 \\
   Nonce & 32-bit integer & 4 \\
-  {\bf Total} & & 80 \\
   \hline
 \end{tabular}
-\end{table}
-
+\caption{The block header for a Bitcoin. These blocks are hashed twice using SHA-256 to determine whether or not the header (with a given nonce) represents a valid Bitcoin. Because the required value becomes harder and harder to match, more and more computation is required to mine additional Bitcoins.}
+\end{table*}
 
 \begin{table*}
+    \centering
 \label{printer_dorks}
 \begin{tabular}{r| p{9cm} | r}
     \hline
@@ -67,4 +68,5 @@ Bitcoin values also provide proof-of-work which verifies that the values are leg
     {\bf Total} & & 116,191 \\
     \hline
 \end{tabular}
+\caption{A set of series of printers that can be located by using Google, their accompanying Google Dorks, and the count of printers returned by the search query.}
 \end{table*}
