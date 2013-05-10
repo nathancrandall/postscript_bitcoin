@@ -140,6 +140,7 @@ setfont
   %(€) concatstrings % ok
   (a) concatstrings
   /input exch def % ok
+  clear
   input input length 1 sub 128 put
   /l input length 4 div 2 add cvi def % ok
   /N l 16 div ceiling cvi def % ok
@@ -152,9 +153,11 @@ setfont
   
   /i 0 def % ok
   1 1 N { % ok
+    pop
     M i 16 array put % ok
     /j 0 def % ok
     0 1 15 { % ok
+      pop
       /offset i 64 mul j 4 mul add def % ok
       /o24 0 def
       /o16 0 def
@@ -180,7 +183,7 @@ setfont
   } for % ok
   
   %/sig_bits input length 1 sub 8 mul LIMIT div def % ok
-  /sig_bits 0 def%sig_bits floor cvi def % ok
+  /sig_bits 0 def % ok
   /less_bits input length 1 sub 8 mul def % ok
   
   M N 1 sub get 14 sig_bits cvi put % ok
@@ -202,12 +205,14 @@ setfont
   
   /i 0 def % ok
   1 1 N {  % ok
+    pop
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% PREPARE MESSAGE SCHEDULE (complete)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     /t 0 def % ok
     0 1 15 { % ok
+      pop
       W t M i get t get put % ok
       /t t 1 add def % ok
     } for % ok
@@ -215,6 +220,7 @@ setfont
     % W[t] = (Sha256.sigma1(W[t-2]) + W[t-7] + Sha256.sigma0(W[t-15])+ W[t-16]) & 0xffffffff;
     /t 16 def % ok
     16 1 63 { % ok
+      pop
       %this next statement has integer overflow
       /val W t 2 sub get sigma1 W t 7 sub get add_o W t 15 sub get sigma0 add_o W t 16 sub get add_o def
       W t val put
@@ -239,7 +245,6 @@ setfont
     %%%%%%%%%%%%%%
     
     /t 0 def
-    clear
     0 1 63 {
       pop
       %T1 = h + Sha256.Sigma1(e) + Sha256.Ch(e, f, g) + K[t] + W[t];
@@ -287,25 +292,257 @@ setfont
   } for
   
   %print to the page
-  0 700 moveto
-  H 0 get 20 string cvs show
-  0 680 moveto
-  H 1 get 20 string cvs show
-  0 660 moveto
-  H 2 get 20 string cvs show
-  0 640 moveto
-  H 3 get 20 string cvs show
-  0 620 moveto
-  H 4 get 20 string cvs show
-  0 600 moveto
-  H 5 get 20 string cvs show
-  0 580 moveto
-  H 6 get 20 string cvs show
-  0 560 moveto
-  H 7 get 20 string cvs show
   
 } def
-(abc) sha256
+
+
+%%OPTIMIZATION CODE:
+/sha256_optimized {
+  /H [1779033703 -1150833019 1013904242 -1521486534 1359893119 -1694144372 528734635 1541459225] def
+  (a) exch dup length    
+  2 index length add string    
+  dup dup 4 2 roll copy length
+  4 -1 roll putinterval dup dup % ok
+  length 1 sub 128 put
+  dup length 4 div 2 add cvi % ok
+  dup 16 div ceiling cvi dup % ok
+  /M exch array def % ok
+  
+  %%%%stack format at this point:
+  %% N
+  %% l
+  %% input
+  %%%%%
+  
+  %%%%%%%%%%%%%%%%%%%%%%%
+  %% MESSAGE FORMATTING (complete)
+  %%%%%%%%%%%%%%%%%%%%%%%
+  
+  0 1 2 index 1 sub { % ok
+    %%%%stack format at this point:
+    %% i
+    %% N
+    %% l
+    %% input
+    %%%%%
+    M 1 index 16 array put
+    0 1 15 {
+      %% j
+      %% i
+      %% N
+      %% l
+      %% input
+      
+      %push the offset down
+      1 index 64 mul 1 index 4 mul add
+      
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      dup 6 index length lt {
+        %/o24 input offset get 24 bitshift def
+        5 index 1 index get 24 bitshift
+      } {
+        0
+      } ifelse
+      
+      %o24
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      1 index 1 add 7 index length lt {
+        %/o16 input offset 1 add get 16 bitshift def
+        6 index 2 index 1 add get 16 bitshift
+      } {
+        0
+      } ifelse
+      
+      %o16
+      %o24
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      2 index 2 add 8 index length lt {
+        %/o8 input offset 2 add get 8 bitshift def
+        7 index 3 index 2 add get 8 bitshift
+      } {
+        0
+      } ifelse
+      
+      %o8
+      %o16
+      %o24
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      3 index 3 add 9 index length lt {
+        %/o input offset 3 add get def
+        8 index 4 index 3 add get
+      } {
+        0
+      } ifelse
+      
+      %o
+      %o8
+      %o16
+      %o24
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      or or or
+      
+      %final
+      %offset
+      %j
+      %i
+      %N
+      %l
+      %input
+      
+      M 4 index get 3 index 2 index put
+      pop pop pop
+    } for
+    pop
+  } for
+  
+  %N
+  %l
+  %input
+  
+  M 1 index 1 sub get 14 0 cvi put
+  
+  2 index length 1 sub 8 mul
+  
+  %less_bits
+  %N
+  %l
+  %input
+  M 2 index 1 sub get 15 2 index cvi 16#FFFFFFFF and put
+  pop
+  
+  %N
+  %l
+  %input
+  
+  /W 64 array def
+  
+  0 1 2 index 1 sub {
+    %i
+    %N
+    %l
+    %input
+    0 1 15 {
+      %j
+      %i
+      %N
+      %l
+      %input
+      W 1 index M 4 index get 3 index get put
+      pop
+    } for
+    16 1 63 {
+      %t
+      %i
+      %N
+      %l
+      %input
+      W 1 index 2 sub get sigma1 %push sigma(W[t-2])
+      W 2 index 7 sub get %push W[t-7]
+      add_o
+      
+      %sigma(W[t-2]) + W[t-7]
+      %t
+      %i
+      %N
+      %l
+      %input
+      
+      W 2 index 15 sub get sigma0
+      W 3 index 16 sub get
+      add_o add_o
+      W 2 index 2 index put
+      pop pop
+    } for
+    /temp 8 array def
+    H temp copy pop
+    0 1 63 {
+      temp 7 get temp 4 get SIGMA1 add_o
+      temp 4 get temp 5 get temp 6 get Ch add_o
+      K 2 index get add_o
+      W 2 index get add_o
+      
+      temp 0 get SIGMA0 temp 0 get temp 1 get temp 2 get Maj add_o
+      
+      %T2
+      %T1
+      %j
+      %i
+      %N a=0 b=1 c=2 d=3 e=4 f=5 g=6 h=7
+      %l
+      %input
+      
+      temp 7 temp 6 get put
+      temp 6 temp 5 get put
+      temp 5 temp 4 get put
+      temp 4 temp 3 get 4 index add_o put
+      temp 3 temp 2 get put
+      temp 2 temp 1 get put
+      temp 1 temp 0 get put
+      add_o temp 0 2 index put
+      pop pop
+    } for
+    
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%
+    %% COMPUTE NEW HASH (complete)
+    %%%%%%%%%%%%%%%%%%%%%
+    
+    %h[i] = (h[i]+[a-h]) & 0xffffffff;
+    
+    H 0 H 0 get temp 0 get add_o put
+    H 1 H 1 get temp 1 get add_o put
+    H 2 H 2 get temp 2 get add_o put
+    H 3 H 3 get temp 3 get add_o put
+    H 4 H 4 get temp 4 get add_o put
+    H 5 H 5 get temp 5 get add_o put
+    H 6 H 6 get temp 6 get add_o put
+    H 7 H 7 get temp 7 get add_o put
+  } for
+  
+  %put hash output onto the stack
+  /t 7 def
+  0 1 7 {
+    pop
+    H t get
+    /t t 1 sub def
+  } for
+  
+} def  
+0 1 9999 {
+  clear
+  (abc) sha256
+} for
 
 %usage: <number> convert_bin_to_string
 %result: string of 4  char bytes
@@ -357,8 +594,8 @@ setfont
   } for
   
   /bversion 0 def
-  /hashPrevBlock 32 array def
-  /hashMerkleRoot 32 array def
+  /hashPrevBlock 8 array def
+  /hashMerkleRoot 8 array def
   /time 0 def
   /bits 0 def
   /nonce_bin 0 def
@@ -367,10 +604,8 @@ setfont
   %now convert them to a string that has the same binary representation
   /bversion bversion convert_bin_to_string def
   /i 0 def
-  0 1 31 {
+  0 1 7 {
     pop
-    hashPrevBlock i 0 put
-    hashMerkleRoot i 0 put
     /sprev sprev hashPrevBlock i get convert_bin_to_string concatstrings def
     /smerkle smerkle hashMerkleRoot i get convert_bin_to_string concatstrings def
     /i i 1 add def
